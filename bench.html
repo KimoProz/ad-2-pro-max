@@ -175,10 +175,11 @@
             transform: translateY(-2px);
         }
         
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        /* تعديل شكل عرض البطاقات */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         .item-card {
@@ -188,12 +189,22 @@
             border: 1px solid #444;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .item-card:hover {
             background: #3a3a3a;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
         }
         
         .item-icon {
@@ -204,8 +215,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
             font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .item-details {
+            flex: 1;
         }
         
         .item-name {
@@ -227,18 +242,36 @@
             color: #666;
         }
         
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .modal {
@@ -434,7 +467,7 @@
                 <button id="addBranchBtn" class="btn">إنشاء فرع جديد</button>
             </div>
             
-            <div id="branchesList" class="items-grid">
+            <div id="branchesList" class="items-list">
                 <div class="loading">جاري تحميل الفروع...</div>
             </div>
         </div>
@@ -467,6 +500,18 @@
             <div class="confirm-actions">
                 <button id="cancelLogout" class="btn btn-secondary">إلغاء</button>
                 <button id="confirmLogout" class="btn" style="background: #ff4757; color: white;">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تأكيد الحذف -->
+    <div id="deleteConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد الحذف</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في حذف هذا الفرع؟</p>
+            <div class="confirm-actions">
+                <button id="cancelDelete" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmDelete" class="btn" style="background: #ff4757; color: white;">حذف</button>
             </div>
         </div>
     </div>
@@ -506,6 +551,7 @@
         let currentAdmin = null;
         let currentProgram = null;
         let currentSubject = null;
+        let currentBranchToDelete = null;
         
         // التحقق من حالة تسجيل الدخول
         firebase.auth().onAuthStateChanged((user) => {
@@ -568,27 +614,37 @@
                 currentSubject = subjectSnapshot.val();
                 document.getElementById('welcomeSubtitle').textContent = `إدارة فروع المادة - ${currentSubject.name}`;
                 
-                // التحقق مما إذا كانت هذه أول زيارة
-                checkFirstVisit();
-                loadBranches();
+                // التحقق مما إذا كانت هناك فروع
+                checkBranchesExistence();
             })
             .catch((error) => {
                 console.error("خطأ في تحميل البيانات:", error);
             });
         }
         
-        function checkFirstVisit() {
-            const hasVisited = localStorage.getItem(`visited_${programId}_${subjectId}`);
+        function checkBranchesExistence() {
+            const database = firebase.database();
             
-            if (!hasVisited) {
-                document.getElementById('branchDialog').style.display = 'flex';
-                localStorage.setItem(`visited_${programId}_${subjectId}`, 'true');
-            }
+            database.ref('programs/' + programId + '/subjects/' + subjectId + '/branches').once('value')
+                .then((snapshot) => {
+                    const branches = snapshot.val();
+                    
+                    // إذا لم تكن هناك فروع، اعرض نافذة السؤال
+                    if (!branches) {
+                        document.getElementById('branchDialog').style.display = 'flex';
+                    } else {
+                        loadBranches();
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من الفروع:", error);
+                });
         }
         
         // معالجة اختيار "نعم" في نافذة السؤال
         document.getElementById('yesBranchBtn').addEventListener('click', () => {
             document.getElementById('branchDialog').style.display = 'none';
+            loadBranches();
         });
         
         // معالجة اختيار "لا" في نافذة السؤال
@@ -657,6 +713,19 @@
             saveBranch(branchName, branchDescription);
         });
         
+        // تأكيد الحذف
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteConfirm').style.display = 'none';
+            currentBranchToDelete = null;
+        });
+        
+        // تنفيذ الحذف
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (currentBranchToDelete) {
+                deleteBranch(currentBranchToDelete);
+            }
+        });
+        
         function saveBranch(name, description) {
             const database = firebase.database();
             const branchId = 'branch' + Date.now();
@@ -680,6 +749,21 @@
             });
         }
         
+        function deleteBranch(branchId) {
+            const database = firebase.database();
+            
+            database.ref('programs/' + programId + '/subjects/' + subjectId + '/branches/' + branchId).remove()
+                .then(() => {
+                    document.getElementById('deleteConfirm').style.display = 'none';
+                    currentBranchToDelete = null;
+                    loadBranches();
+                })
+                .catch((error) => {
+                    console.error("خطأ في حذف الفرع:", error);
+                    alert("حدث خطأ أثناء حذف الفرع");
+                });
+        }
+        
         function loadBranches() {
             const database = firebase.database();
             const branchesList = document.getElementById('branchesList');
@@ -699,19 +783,32 @@
                         
                         const branchCard = document.createElement('div');
                         branchCard.className = 'item-card';
-                        branchCard.onclick = () => {
-                            window.location.href = `dr.html?program=${programId}&subject=${subjectId}&branch=${branchId}`;
-                        };
                         
                         branchCard.innerHTML = `
-                            <div class="item-icon">🌿</div>
-                            <div class="item-name">${branch.name}</div>
-                            <div class="item-description">${branch.description || 'لا يوجد وصف'}</div>
-                            <div class="item-admin">بواسطة: ${branch.ad}</div>
+                            <div class="item-content" onclick="window.location.href='dr.html?program=${programId}&subject=${subjectId}&branch=${branchId}'">
+                                <div class="item-icon">🌿</div>
+                                <div class="item-details">
+                                    <div class="item-name">${branch.name}</div>
+                                    <div class="item-description">${branch.description || 'لا يوجد وصف'}</div>
+                                    <div class="item-admin">بواسطة: ${branch.ad}</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="delete-btn" data-branch="${branchId}">حذف</button>
+                            </div>
                         `;
                         
                         branchesList.appendChild(branchCard);
                     }
+                    
+                    // إضافة مستمعي الأحداث لأزرار الحذف
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation(); // منع فتح صفحة الفرع عند النقر على زر الحذف
+                            currentBranchToDelete = button.getAttribute('data-branch');
+                            document.getElementById('deleteConfirm').style.display = 'flex';
+                        });
+                    });
                 })
                 .catch((error) => {
                     console.error("خطأ في تحميل الفروع:", error);
