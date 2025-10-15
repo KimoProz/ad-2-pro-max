@@ -175,10 +175,11 @@
             transform: translateY(-2px);
         }
         
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        /* تعديل شكل عرض البطاقات */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         .item-card {
@@ -188,12 +189,22 @@
             border: 1px solid #444;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .item-card:hover {
             background: #3a3a3a;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
         }
         
         .item-icon {
@@ -204,8 +215,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
             font-size: 24px;
+        }
+        
+        .item-details {
+            flex: 1;
         }
         
         .item-name {
@@ -227,18 +241,36 @@
             color: #666;
         }
         
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .modal {
@@ -393,7 +425,7 @@
                 <button id="addSubjectBtn" class="btn">إنشاء مادة جديدة</button>
             </div>
             
-            <div id="subjectsList" class="items-grid">
+            <div id="subjectsList" class="items-list">
                 <div class="loading">جاري تحميل المواد...</div>
             </div>
         </div>
@@ -430,6 +462,18 @@
         </div>
     </div>
     
+    <!-- نافذة تأكيد الحذف -->
+    <div id="deleteConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد الحذف</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في حذف هذه المادة؟</p>
+            <div class="confirm-actions">
+                <button id="cancelDelete" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmDelete" class="btn" style="background: #ff4757; color: white;">حذف</button>
+            </div>
+        </div>
+    </div>
+    
     <footer>
         <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
     </footer>
@@ -451,6 +495,7 @@
         
         let currentAdmin = null;
         let currentProgram = null;
+        let currentSubjectToDelete = null;
         
         // التحقق من حالة تسجيل الدخول
         firebase.auth().onAuthStateChanged((user) => {
@@ -575,6 +620,19 @@
             saveSubject(subjectName, subjectDescription);
         });
         
+        // تأكيد الحذف
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteConfirm').style.display = 'none';
+            currentSubjectToDelete = null;
+        });
+        
+        // تنفيذ الحذف
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (currentSubjectToDelete) {
+                deleteSubject(currentSubjectToDelete);
+            }
+        });
+        
         function saveSubject(name, description) {
             const database = firebase.database();
             const subjectId = 'subject' + Date.now();
@@ -598,6 +656,21 @@
             });
         }
         
+        function deleteSubject(subjectId) {
+            const database = firebase.database();
+            
+            database.ref('programs/' + programId + '/subjects/' + subjectId).remove()
+                .then(() => {
+                    document.getElementById('deleteConfirm').style.display = 'none';
+                    currentSubjectToDelete = null;
+                    loadSubjects();
+                })
+                .catch((error) => {
+                    console.error("خطأ في حذف المادة:", error);
+                    alert("حدث خطأ أثناء حذف المادة");
+                });
+        }
+        
         function loadSubjects() {
             const database = firebase.database();
             const subjectsList = document.getElementById('subjectsList');
@@ -617,19 +690,32 @@
                         
                         const subjectCard = document.createElement('div');
                         subjectCard.className = 'item-card';
-                        subjectCard.onclick = () => {
-                            window.location.href = `bench.html?program=${programId}&subject=${subjectId}`;
-                        };
                         
                         subjectCard.innerHTML = `
-                            <div class="item-icon">📚</div>
-                            <div class="item-name">${subject.name}</div>
-                            <div class="item-description">${subject.description || 'لا يوجد وصف'}</div>
-                            <div class="item-admin">بواسطة: ${subject.ad}</div>
+                            <div class="item-content" onclick="window.location.href='bench.html?program=${programId}&subject=${subjectId}'">
+                                <div class="item-icon">📚</div>
+                                <div class="item-details">
+                                    <div class="item-name">${subject.name}</div>
+                                    <div class="item-description">${subject.description || 'لا يوجد وصف'}</div>
+                                    <div class="item-admin">بواسطة: ${subject.ad}</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="delete-btn" data-subject="${subjectId}">حذف</button>
+                            </div>
                         `;
                         
                         subjectsList.appendChild(subjectCard);
                     }
+                    
+                    // إضافة مستمعي الأحداث لأزرار الحذف
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation(); // منع فتح صفحة المادة عند النقر على زر الحذف
+                            currentSubjectToDelete = button.getAttribute('data-subject');
+                            document.getElementById('deleteConfirm').style.display = 'flex';
+                        });
+                    });
                 })
                 .catch((error) => {
                     console.error("خطأ في تحميل المواد:", error);
