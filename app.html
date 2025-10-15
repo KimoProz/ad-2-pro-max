@@ -175,10 +175,11 @@
             transform: translateY(-2px);
         }
         
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+        /* تعديل شكل عرض البطاقات */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         .item-card {
@@ -188,12 +189,22 @@
             border: 1px solid #444;
             transition: all 0.3s ease;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .item-card:hover {
             background: #3a3a3a;
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
         }
         
         .item-icon {
@@ -204,8 +215,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
             font-size: 24px;
+        }
+        
+        .item-details {
+            flex: 1;
         }
         
         .item-name {
@@ -227,18 +241,36 @@
             color: #666;
         }
         
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .loading {
             text-align: center;
             padding: 40px;
             color: #888;
-            grid-column: 1 / -1;
         }
         
         .modal {
@@ -393,7 +425,7 @@
                 <button id="addAppBtn" class="btn">إنشاء تطبيق جديد</button>
             </div>
             
-            <div id="appsList" class="items-grid">
+            <div id="appsList" class="items-list">
                 <div class="loading">جاري تحميل التطبيقات...</div>
             </div>
         </div>
@@ -430,6 +462,18 @@
         </div>
     </div>
     
+    <!-- نافذة تأكيد الحذف -->
+    <div id="deleteConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد الحذف</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في حذف هذا التطبيق؟</p>
+            <div class="confirm-actions">
+                <button id="cancelDelete" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmDelete" class="btn" style="background: #ff4757; color: white;">حذف</button>
+            </div>
+        </div>
+    </div>
+    
     <footer>
         <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
     </footer>
@@ -447,6 +491,7 @@
         firebase.initializeApp(firebaseConfig);
         
         let currentAdmin = null;
+        let currentProgramToDelete = null;
         
         // التحقق من حالة تسجيل الدخول
         firebase.auth().onAuthStateChanged((user) => {
@@ -570,6 +615,34 @@
             });
         }
         
+        // تأكيد الحذف
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteConfirm').style.display = 'none';
+            currentProgramToDelete = null;
+        });
+        
+        // تنفيذ الحذف
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (currentProgramToDelete) {
+                deleteApp(currentProgramToDelete);
+            }
+        });
+        
+        function deleteApp(programId) {
+            const database = firebase.database();
+            
+            database.ref('programs/' + programId).remove()
+                .then(() => {
+                    document.getElementById('deleteConfirm').style.display = 'none';
+                    currentProgramToDelete = null;
+                    loadApps();
+                })
+                .catch((error) => {
+                    console.error("خطأ في حذف التطبيق:", error);
+                    alert("حدث خطأ أثناء حذف التطبيق");
+                });
+        }
+        
         function loadApps() {
             const database = firebase.database();
             const appsList = document.getElementById('appsList');
@@ -589,19 +662,32 @@
                         
                         const appCard = document.createElement('div');
                         appCard.className = 'item-card';
-                        appCard.onclick = () => {
-                            window.location.href = `sub.html?program=${programId}`;
-                        };
                         
                         appCard.innerHTML = `
-                            <div class="item-icon">📱</div>
-                            <div class="item-name">${program.name}</div>
-                            <div class="item-description">${program.description || 'لا يوجد وصف'}</div>
-                            <div class="item-admin">بواسطة: ${program.ad}</div>
+                            <div class="item-content" onclick="window.location.href='sub.html?program=${programId}'">
+                                <div class="item-icon">📱</div>
+                                <div class="item-details">
+                                    <div class="item-name">${program.name}</div>
+                                    <div class="item-description">${program.description || 'لا يوجد وصف'}</div>
+                                    <div class="item-admin">بواسطة: ${program.ad}</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="delete-btn" data-program="${programId}">حذف</button>
+                            </div>
                         `;
                         
                         appsList.appendChild(appCard);
                     }
+                    
+                    // إضافة مستمعي الأحداث لأزرار الحذف
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation(); // منع فتح صفحة التطبيق عند النقر على زر الحذف
+                            currentProgramToDelete = button.getAttribute('data-program');
+                            document.getElementById('deleteConfirm').style.display = 'flex';
+                        });
+                    });
                 })
                 .catch((error) => {
                     console.error("خطأ في تحميل التطبيقات:", error);
