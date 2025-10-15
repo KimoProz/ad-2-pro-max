@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo7adraty - تسجيل الدخول</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-card {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            text-align: center;
+            border: 1px solid #444;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .welcome-text {
+            margin-bottom: 30px;
+            color: #cccccc;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn img {
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+        }
+        
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        footer {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #444;
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-card">
+            <div class="logo">Mo7adraty</div>
+            <div class="welcome-text">
+                مرحباً بك في نظام إدارة المحتوى. يرجى تسجيل الدخول للوصول إلى لوحة التحكم.
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <button id="googleSignIn" class="btn">
+                <span>تسجيل الدخول عبر جوجل</span>
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google">
+            </button>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
+    </footer>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoxrR7OvzDppT5LxYVoZTLCFvTeyDqPkQ",
+            authDomain: "mo7adraty-1636d.firebaseapp.com",
+            databaseURL: "https://mo7adraty-1636d-default-rtdb.firebaseio.com",
+            projectId: "mo7adraty-1636d",
+            storageBucket: "mo7adraty-1636d.firebasestorage.app"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // التحقق من حالة تسجيل الدخول
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                checkAdminStatus(user);
+            }
+        });
+        
+        // معالجة تسجيل الدخول عبر جوجل
+        document.getElementById('googleSignIn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    checkAdminStatus(user);
+                })
+                .catch((error) => {
+                    console.error("خطأ في تسجيل الدخول:", error);
+                    showError("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
+                });
+        });
+        
+        // التحقق من حالة المسؤول
+        function checkAdminStatus(user) {
+            const database = firebase.database();
+            
+            database.ref('admins').orderByChild('email').equalTo(user.email).once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const adminData = snapshot.val();
+                        const adminId = Object.keys(adminData)[0];
+                        const admin = adminData[adminId];
+                        
+                        if (admin.ban) {
+                            firebase.auth().signOut();
+                            showError("تم حظر حسابك من قبل مالك الموقع.");
+                            return;
+                        }
+                        
+                        // إذا كان مسجلاً مسبقاً، انتقل مباشرة إلى التطبيقات
+                        window.location.href = 'app.html';
+                    } else {
+                        // إذا كان جديداً، انتقل إلى صفحة إدخال الاسم
+                        window.location.href = 'name.html';
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من المسؤول:", error);
+                    showError("حدث خطأ في التحقق من صلاحياتك.");
+                });
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

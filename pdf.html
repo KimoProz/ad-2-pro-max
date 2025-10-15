@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo7adraty - ملفات PDF</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #2a2a2a;
+            padding: 15px 30px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #666;
+        }
+        
+        .user-avatar:hover {
+            background: #555;
+            border-color: #888;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .user-dropdown.show {
+            display: block;
+        }
+        
+        .user-info {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+        
+        .logout-btn:hover {
+            background: #ff3742;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .welcome-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .welcome-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .welcome-subtitle {
+            color: #cccccc;
+            font-size: 16px;
+        }
+        
+        .content-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            color: #ffffff;
+        }
+        
+        .btn {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .item-card {
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .item-card:hover {
+            background: #3a3a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .item-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .item-details {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .item-description {
+            font-size: 14px;
+            color: #aaaaaa;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+        
+        .item-admin {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: #45a049;
+        }
+        
+        .download-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .delete-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff3742;
+        }
+        
+        .url-warning {
+            font-size: 12px;
+            color: #ffa500;
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 165, 0, 0.1);
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #444;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        
+        .upload-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-option {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .upload-option.active {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        
+        .upload-option:hover {
+            background: #3a3a3a;
+        }
+        
+        .upload-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .upload-text {
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #333;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            border: 1px dashed #555;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input-label:hover {
+            border-color: #888;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #777;
+        }
+        
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirm-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .confirm-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+        
+        .confirm-message {
+            margin-bottom: 25px;
+            color: #cccccc;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            color: #ffffff;
+            font-size: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #444;
+            margin-top: 50px;
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Mo7adraty</div>
+        <div class="user-menu">
+            <div class="user-avatar" id="userAvatar">
+                <span>⚙️</span>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-info">
+                    <div class="user-name" id="userName">اسم المستخدم</div>
+                    <div class="user-email" id="userEmail">user@example.com</div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-section">
+            <h1 class="welcome-title" id="welcomeTitle">مرحباً، [اسم المستخدم]</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">إدارة الملفات والصور</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">الملفات المتاحة</h2>
+                <button id="addFileBtn" class="btn">إضافة ملف جديد</button>
+            </div>
+            
+            <div id="fileList" class="items-list">
+                <div class="loading">جاري تحميل الملفات...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة إضافة ملف جديد -->
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">إضافة ملف جديد</h3>
+            
+            <div class="upload-options">
+                <div class="upload-option active" id="linkOption">
+                    <div class="upload-icon">🔗</div>
+                    <div class="upload-text">رابط MediaFire</div>
+                </div>
+                <div class="upload-option" id="imageOption">
+                    <div class="upload-icon">🖼️</div>
+                    <div class="upload-text">رفع صورة</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="fileName">اسم الملف</label>
+                <input type="text" id="fileName" placeholder="أدخل اسم الملف">
+            </div>
+            
+            <div class="form-group" id="linkSection">
+                <label for="fileUrl">رابط التنزيل المباشر (MediaFire)</label>
+                <input type="url" id="fileUrl" placeholder="أدخل رابط التنزيل المباشر من MediaFire">
+                <div id="urlWarning" class="url-warning" style="display: none;">
+                    تأكد من صحة الرابط قبل نشره
+                </div>
+            </div>
+            
+            <div class="form-group" id="imageSection" style="display: none;">
+                <label>رفع صورة</label>
+                <div class="file-input-wrapper">
+                    <div class="file-input-label" id="imageLabel">
+                        انقر لاختيار صورة
+                    </div>
+                    <input type="file" id="imageFile" accept="image/*">
+                    <div class="file-name" id="imageFileName"></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="fileDescription">وصف الملف</label>
+                <textarea id="fileDescription" placeholder="أدخل وصف الملف"></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button id="cancelFileBtn" class="btn btn-secondary">إلغاء</button>
+                <button id="saveFileBtn" class="btn">حفظ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تأكيد تسجيل الخروج -->
+    <div id="logoutConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد تسجيل الخروج</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في تسجيل الخروج؟</p>
+            <div class="confirm-actions">
+                <button id="cancelLogout" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmLogout" class="btn" style="background: #ff4757; color: white;">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تأكيد الحذف -->
+    <div id="deleteConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد الحذف</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في حذف هذا الملف؟</p>
+            <div class="confirm-actions">
+                <button id="cancelDelete" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmDelete" class="btn" style="background: #ff4757; color: white;">حذف</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة التحميل -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">جاري معالجة الرابط...</div>
+    </div>
+    
+    <footer>
+        <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
+    </footer>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoxrR7OvzDppT5LxYVoZTLCFvTeyDqPkQ",
+            authDomain: "mo7adraty-1636d.firebaseapp.com",
+            databaseURL: "https://mo7adraty-1636d-default-rtdb.firebaseio.com",
+            projectId: "mo7adraty-1636d",
+            storageBucket: "mo7adraty-1636d.firebasestorage.app"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const programId = urlParams.get('program');
+        const subjectId = urlParams.get('subject');
+        const branchId = urlParams.get('branch');
+        const doctorId = urlParams.get('doctor');
+        
+        let currentAdmin = null;
+        let currentProgram = null;
+        let currentSubject = null;
+        let currentBranch = null;
+        let currentDoctor = null;
+        let fileToDelete = null;
+        let currentUploadType = 'link'; // 'link' أو 'image'
+        
+        // التحقق من حالة تسجيل الدخول
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                checkAdminStatus(user);
+            }
+        });
+        
+        function checkAdminStatus(user) {
+            const database = firebase.database();
+            
+            database.ref('admins').orderByChild('email').equalTo(user.email).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        firebase.auth().signOut();
+                        return;
+                    }
+                    
+                    const adminData = snapshot.val();
+                    const adminId = Object.keys(adminData)[0];
+                    currentAdmin = adminData[adminId];
+                    
+                    if (currentAdmin.ban) {
+                        firebase.auth().signOut();
+                        alert("تم حظر حسابك من قبل مالك الموقع.");
+                        return;
+                    }
+                    
+                    document.getElementById('userName').textContent = currentAdmin.name;
+                    document.getElementById('userEmail').textContent = user.email;
+                    document.getElementById('welcomeTitle').textContent = `مرحباً، ${currentAdmin.name}`;
+                    loadDoctorData();
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من المسؤول:", error);
+                });
+        }
+        
+        function loadDoctorData() {
+            if (!programId || !subjectId || !doctorId) {
+                window.location.href = 'app.html';
+                return;
+            }
+            
+            const database = firebase.database();
+            
+            const promises = [
+                database.ref('programs/' + programId).once('value'),
+                database.ref('programs/' + programId + '/subjects/' + subjectId).once('value')
+            ];
+            
+            if (branchId) {
+                promises.push(
+                    database.ref('programs/' + programId + '/subjects/' + subjectId + '/branches/' + branchId).once('value'),
+                    database.ref('programs/' + programId + '/subjects/' + subjectId + '/branches/' + branchId + '/doctors/' + doctorId).once('value')
+                );
+            } else {
+                promises.push(
+                    database.ref('programs/' + programId + '/subjects/' + subjectId + '/doctors/' + doctorId).once('value')
+                );
+            }
+            
+            Promise.all(promises)
+            .then((results) => {
+                const programSnapshot = results[0];
+                const subjectSnapshot = results[1];
+                
+                if (!programSnapshot.exists() || !subjectSnapshot.exists()) {
+                    window.location.href = 'app.html';
+                    return;
+                }
+                
+                currentProgram = programSnapshot.val();
+                currentSubject = subjectSnapshot.val();
+                
+                if (branchId) {
+                    const branchSnapshot = results[2];
+                    const branchDoctorSnapshot = results[3];
+                    
+                    if (!branchSnapshot.exists() || !branchDoctorSnapshot.exists()) {
+                        window.location.href = 'app.html';
+                        return;
+                    }
+                    
+                    currentBranch = branchSnapshot.val();
+                    currentDoctor = branchDoctorSnapshot.val();
+                } else {
+                    const doctorSnapshot = results[2];
+                    
+                    if (!doctorSnapshot.exists()) {
+                        window.location.href = 'app.html';
+                        return;
+                    }
+                    
+                    currentDoctor = doctorSnapshot.val();
+                }
+                
+                let title = `إدارة الملفات - ${currentDoctor.name}`;
+                document.getElementById('welcomeSubtitle').textContent = title;
+                loadFiles();
+            })
+            .catch((error) => {
+                console.error("خطأ في تحميل البيانات:", error);
+                window.location.href = 'app.html';
+            });
+        }
+        
+        // فتح/إغلاق قائمة المستخدم
+        document.getElementById('userAvatar').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        
+        // إغلاق قائمة المستخدم عند النقر خارجها
+        document.addEventListener('click', (event) => {
+            const userMenu = document.querySelector('.user-menu');
+            if (!userMenu.contains(event.target)) {
+                document.getElementById('userDropdown').classList.remove('show');
+            }
+        });
+        
+        // فتح نافذة تأكيد تسجيل الخروج
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('show');
+            document.getElementById('logoutConfirm').style.display = 'flex';
+        });
+        
+        // إلغاء تسجيل الخروج
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            document.getElementById('logoutConfirm').style.display = 'none';
+        });
+        
+        // تأكيد تسجيل الخروج
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            firebase.auth().signOut()
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error("خطأ في تسجيل الخروج:", error);
+                });
+        });
+        
+        // فتح نافذة إضافة ملف جديد
+        document.getElementById('addFileBtn').addEventListener('click', () => {
+            document.getElementById('fileModal').style.display = 'flex';
+            document.getElementById('urlWarning').style.display = 'none';
+            resetFileModal();
+        });
+        
+        // إغلاق نافذة إضافة ملف جديد
+        document.getElementById('cancelFileBtn').addEventListener('click', () => {
+            document.getElementById('fileModal').style.display = 'none';
+            resetFileModal();
+        });
+        
+        // إعادة تعيين نافذة إضافة الملف
+        function resetFileModal() {
+            document.getElementById('fileName').value = '';
+            document.getElementById('fileUrl').value = '';
+            document.getElementById('fileDescription').value = '';
+            document.getElementById('imageFile').value = '';
+            document.getElementById('imageFileName').textContent = '';
+            document.getElementById('imageLabel').textContent = 'انقر لاختيار صورة';
+            document.getElementById('urlWarning').style.display = 'none';
+            
+            // إعادة تعيين نوع الرفع إلى رابط
+            document.getElementById('linkOption').classList.add('active');
+            document.getElementById('imageOption').classList.remove('active');
+            document.getElementById('linkSection').style.display = 'block';
+            document.getElementById('imageSection').style.display = 'none';
+            currentUploadType = 'link';
+        }
+        
+        // تغيير نوع الرفع
+        document.getElementById('linkOption').addEventListener('click', () => {
+            document.getElementById('linkOption').classList.add('active');
+            document.getElementById('imageOption').classList.remove('active');
+            document.getElementById('linkSection').style.display = 'block';
+            document.getElementById('imageSection').style.display = 'none';
+            currentUploadType = 'link';
+        });
+        
+        document.getElementById('imageOption').addEventListener('click', () => {
+            document.getElementById('imageOption').classList.add('active');
+            document.getElementById('linkOption').classList.remove('active');
+            document.getElementById('linkSection').style.display = 'none';
+            document.getElementById('imageSection').style.display = 'block';
+            currentUploadType = 'image';
+        });
+        
+        // عرض اسم الملف المختار
+        document.getElementById('imageFile').addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                document.getElementById('imageFileName').textContent = this.files[0].name;
+                document.getElementById('imageLabel').textContent = 'تم اختيار صورة';
+            }
+        });
+        
+        // التحقق من نوع الرابط عند إدخاله
+        document.getElementById('fileUrl').addEventListener('input', function() {
+            const url = this.value.trim();
+            const urlWarning = document.getElementById('urlWarning');
+            
+            if (url && !isMediaFireUrl(url)) {
+                urlWarning.style.display = 'block';
+            } else {
+                urlWarning.style.display = 'none';
+            }
+        });
+        
+        // حفظ الملف الجديد
+        document.getElementById('saveFileBtn').addEventListener('click', () => {
+            const fileName = document.getElementById('fileName').value.trim();
+            const fileDescription = document.getElementById('fileDescription').value.trim();
+            
+            if (!fileName) {
+                alert('يرجى إدخال اسم الملف');
+                return;
+            }
+            
+            if (currentUploadType === 'link') {
+                const fileUrl = document.getElementById('fileUrl').value.trim();
+                
+                if (!fileUrl) {
+                    alert('يرجى إدخال رابط التنزيل المباشر');
+                    return;
+                }
+                
+                // إذا كان الرابط من MediaFire، فقم بفحصه
+                if (isMediaFireUrl(fileUrl)) {
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    document.getElementById('loadingText').textContent = 'جاري فحص رابط MediaFire...';
+                    
+                    checkMediaFireUrl(fileUrl)
+                        .then((isValid) => {
+                            document.getElementById('loadingOverlay').style.display = 'none';
+                            
+                            if (isValid) {
+                                saveFile(fileName, fileUrl, fileDescription, 'link');
+                            } else {
+                                alert('رابط MediaFire غير صالح. يرجى التأكد من الرابط والمحاولة مرة أخرى.');
+                            }
+                        })
+                        .catch((error) => {
+                            document.getElementById('loadingOverlay').style.display = 'none';
+                            console.error("خطأ في التحقق من الرابط:", error);
+                            alert('حدث خطأ أثناء التحقق من الرابط. يرجى المحاولة مرة أخرى.');
+                        });
+                } else {
+                    // إذا كان الرابط ليس من MediaFire، احفظه مباشرة
+                    saveFile(fileName, fileUrl, fileDescription, 'link');
+                }
+            } else {
+                // رفع صورة
+                const imageFile = document.getElementById('imageFile').files[0];
+                
+                if (!imageFile) {
+                    alert('يرجى اختيار صورة');
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('loadingText').textContent = 'جاري رفع الصورة...';
+                
+                uploadImageToImgBB(imageFile)
+                    .then((imageUrl) => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        saveFile(fileName, imageUrl, fileDescription, 'image');
+                    })
+                    .catch((error) => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error("خطأ في رفع الصورة:", error);
+                        alert('حدث خطأ أثناء رفع الصورة. يرجى المحاولة مرة أخرى.');
+                    });
+            }
+        });
+        
+        // التحقق مما إذا كان الرابط من MediaFire
+        function isMediaFireUrl(url) {
+            return url.includes('mediafire.com');
+        }
+        
+        // التحقق من صحة رابط MediaFire
+        function checkMediaFireUrl(url) {
+            return new Promise((resolve, reject) => {
+                const apiUrl = `https://script.google.com/macros/s/AKfycbzlpPlYUeDgsaq0Gb6A6Yxj78E0E7LZbQ3en6hIhIvPrax1URjCeIZ2ptV1mrYlYahC5w/exec?url=${encodeURIComponent(url)}`;
+                
+                fetch(apiUrl)
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result.includes('发生错误，请联系开发者 KIMO')) {
+                            resolve(false);
+                        } else {
+                            resolve(true);
+                        }
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
+            });
+        }
+        
+        // رفع الصورة إلى ImgBB
+        function uploadImageToImgBB(imageFile) {
+            return new Promise((resolve, reject) => {
+                const apiKey = 'a358cd5264f543deb8d3aab71c576b47';
+                const formData = new FormData();
+                formData.append('image', imageFile);
+                
+                fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        resolve(data.data.url);
+                    } else {
+                        reject(new Error('فشل في رفع الصورة'));
+                    }
+                })
+                .catch(error => {
+                    reject(error);
+                });
+            });
+        }
+        
+        // معالجة تحميل الملف
+        function handleFileDownload(fileUrl, fileType) {
+            // إذا كان الملف من MediaFire، فاستخدم API للتحقق منه
+            if (fileType === 'link' && isMediaFireUrl(fileUrl)) {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('loadingText').textContent = 'جاري معالجة الرابط...';
+                
+                const apiUrl = `https://script.google.com/macros/s/AKfycbzlpPlYUeDgsaq0Gb6A6Yxj78E0E7LZbQ3en6hIhIvPrax1URjCeIZ2ptV1mrYlYahC5w/exec?url=${encodeURIComponent(fileUrl)}`;
+                
+                fetch(apiUrl)
+                    .then(response => response.text())
+                    .then(result => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        
+                        if (result.includes('发生错误，请联系开发者 KIMO')) {
+                            alert('رابط التحميل غير صالح. يرجى التواصل مع المسؤول.');
+                        } else {
+                            // فتح الرابط في نافذة جديدة
+                            window.open(result, '_blank');
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                        console.error("خطأ في معالجة الرابط:", error);
+                        alert('حدث خطأ أثناء معالجة الرابط. يرجى المحاولة مرة أخرى.');
+                    });
+            } else {
+                // إذا كان الملف ليس من MediaFire أو كان صورة، افتحه مباشرة
+                window.open(fileUrl, '_blank');
+            }
+        }
+        
+        function saveFile(name, url, description, type) {
+            const database = firebase.database();
+            const fileId = 'file' + Date.now();
+            
+            let refPath;
+            if (branchId) {
+                refPath = `programs/${programId}/subjects/${subjectId}/branches/${branchId}/doctors/${doctorId}/files/${fileId}`;
+            } else {
+                refPath = `programs/${programId}/subjects/${subjectId}/doctors/${doctorId}/files/${fileId}`;
+            }
+            
+            database.ref(refPath).set({
+                name: name,
+                url: url,
+                description: description,
+                type: type,
+                code: currentAdmin.code,
+                ad: currentAdmin.name
+            })
+            .then(() => {
+                document.getElementById('fileModal').style.display = 'none';
+                resetFileModal();
+                loadFiles();
+            })
+            .catch((error) => {
+                console.error("خطأ في حفظ الملف:", error);
+                alert("حدث خطأ أثناء حفظ الملف");
+            });
+        }
+        
+        function loadFiles() {
+            const database = firebase.database();
+            const fileList = document.getElementById('fileList');
+            
+            let refPath;
+            if (branchId) {
+                refPath = `programs/${programId}/subjects/${subjectId}/branches/${branchId}/doctors/${doctorId}/files`;
+            } else {
+                refPath = `programs/${programId}/subjects/${subjectId}/doctors/${doctorId}/files`;
+            }
+            
+            database.ref(refPath).once('value')
+                .then((snapshot) => {
+                    const files = snapshot.val();
+                    fileList.innerHTML = '';
+                    
+                    if (!files) {
+                        fileList.innerHTML = '<div class="empty-state">لا توجد ملفات حتى الآن</div>';
+                        return;
+                    }
+                    
+                    for (const fileId in files) {
+                        const file = files[fileId];
+                        
+                        const fileCard = document.createElement('div');
+                        fileCard.className = 'item-card';
+                        
+                        const icon = file.type === 'image' ? '🖼️' : '📄';
+                        
+                        fileCard.innerHTML = `
+                            <div class="item-info">
+                                <div class="item-icon">${icon}</div>
+                                <div class="item-details">
+                                    <div class="item-name">${file.name}</div>
+                                    <div class="item-description">${file.description || 'لا يوجد وصف'}</div>
+                                    <div class="item-admin">بواسطة: ${file.ad}</div>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="download-btn" data-url="${file.url}" data-type="${file.type}">${file.type === 'image' ? 'عرض الصورة' : 'تحميل الملف'}</button>
+                                <button class="delete-btn" data-id="${fileId}">حذف</button>
+                            </div>
+                        `;
+                        
+                        fileList.appendChild(fileCard);
+                    }
+                    
+                    // إضافة مستمعات الأحداث لأزرار التحميل/العرض
+                    document.querySelectorAll('.download-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const fileUrl = button.getAttribute('data-url');
+                            const fileType = button.getAttribute('data-type');
+                            handleFileDownload(fileUrl, fileType);
+                        });
+                    });
+                    
+                    // إضافة مستمعات الأحداث لأزرار الحذف
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            fileToDelete = button.getAttribute('data-id');
+                            document.getElementById('deleteConfirm').style.display = 'flex';
+                        });
+                    });
+                })
+                .catch((error) => {
+                    console.error("خطأ في تحميل الملفات:", error);
+                    fileList.innerHTML = '<div class="empty-state">حدث خطأ في تحميل الملفات</div>';
+                });
+        }
+        
+        // إلغاء الحذف
+        document.getElementById('cancelDelete').addEventListener('click', () => {
+            document.getElementById('deleteConfirm').style.display = 'none';
+            fileToDelete = null;
+        });
+        
+        // تأكيد الحذف
+        document.getElementById('confirmDelete').addEventListener('click', () => {
+            if (fileToDelete) {
+                deleteFile(fileToDelete);
+                document.getElementById('deleteConfirm').style.display = 'none';
+                fileToDelete = null;
+            }
+        });
+        
+        // حذف ملف
+        function deleteFile(fileId) {
+            const database = firebase.database();
+            
+            let refPath;
+            if (branchId) {
+                refPath = `programs/${programId}/subjects/${subjectId}/branches/${branchId}/doctors/${doctorId}/files/${fileId}`;
+            } else {
+                refPath = `programs/${programId}/subjects/${subjectId}/doctors/${doctorId}/files/${fileId}`;
+            }
+            
+            database.ref(refPath).remove()
+                .then(() => {
+                    loadFiles();
+                })
+                .catch((error) => {
+                    console.error("خطأ في حذف الملف:", error);
+                    alert("حدث خطأ أثناء حذف الملف");
+                });
+        }
+    </script>
+</body>
+</html>

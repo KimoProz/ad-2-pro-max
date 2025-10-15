@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo7adraty - المواد</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #2a2a2a;
+            padding: 15px 30px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #666;
+        }
+        
+        .user-avatar:hover {
+            background: #555;
+            border-color: #888;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .user-dropdown.show {
+            display: block;
+        }
+        
+        .user-info {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+        
+        .logout-btn:hover {
+            background: #ff3742;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .welcome-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .welcome-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .welcome-subtitle {
+            color: #cccccc;
+            font-size: 16px;
+        }
+        
+        .content-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            color: #ffffff;
+        }
+        
+        .btn {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .item-card {
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .item-card:hover {
+            background: #3a3a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .item-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+        
+        .item-description {
+            font-size: 14px;
+            color: #aaaaaa;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        .item-admin {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #444;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #333;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #777;
+        }
+        
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirm-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .confirm-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+        
+        .confirm-message {
+            margin-bottom: 25px;
+            color: #cccccc;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        footer {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #444;
+            margin-top: 50px;
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Mo7adraty</div>
+        <div class="user-menu">
+            <div class="user-avatar" id="userAvatar">
+                <span>⚙️</span>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-info">
+                    <div class="user-name" id="userName">اسم المستخدم</div>
+                    <div class="user-email" id="userEmail">user@example.com</div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-section">
+            <h1 class="welcome-title" id="welcomeTitle">مرحباً، [اسم المستخدم]</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">إدارة المواد الدراسية</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">المواد الدراسية</h2>
+                <button id="addSubjectBtn" class="btn">إنشاء مادة جديدة</button>
+            </div>
+            
+            <div id="subjectsList" class="items-grid">
+                <div class="loading">جاري تحميل المواد...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة إنشاء مادة جديدة -->
+    <div id="subjectModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">إنشاء مادة جديدة</h3>
+            <div class="form-group">
+                <label for="subjectName">اسم المادة</label>
+                <input type="text" id="subjectName" placeholder="أدخل اسم المادة">
+            </div>
+            <div class="form-group">
+                <label for="subjectDescription">وصف المادة</label>
+                <textarea id="subjectDescription" placeholder="أدخل وصف المادة"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="cancelSubjectBtn" class="btn btn-secondary">إلغاء</button>
+                <button id="saveSubjectBtn" class="btn">حفظ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تأكيد تسجيل الخروج -->
+    <div id="logoutConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد تسجيل الخروج</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في تسجيل الخروج؟</p>
+            <div class="confirm-actions">
+                <button id="cancelLogout" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmLogout" class="btn" style="background: #ff4757; color: white;">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
+    </footer>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoxrR7OvzDppT5LxYVoZTLCFvTeyDqPkQ",
+            authDomain: "mo7adraty-1636d.firebaseapp.com",
+            databaseURL: "https://mo7adraty-1636d-default-rtdb.firebaseio.com",
+            projectId: "mo7adraty-1636d",
+            storageBucket: "mo7adraty-1636d.firebasestorage.app"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const programId = urlParams.get('program');
+        
+        let currentAdmin = null;
+        let currentProgram = null;
+        
+        // التحقق من حالة تسجيل الدخول
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                checkAdminStatus(user);
+            }
+        });
+        
+        function checkAdminStatus(user) {
+            const database = firebase.database();
+            
+            database.ref('admins').orderByChild('email').equalTo(user.email).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        firebase.auth().signOut();
+                        return;
+                    }
+                    
+                    const adminData = snapshot.val();
+                    const adminId = Object.keys(adminData)[0];
+                    currentAdmin = adminData[adminId];
+                    
+                    if (currentAdmin.ban) {
+                        firebase.auth().signOut();
+                        alert("تم حظر حسابك من قبل مالك الموقع.");
+                        return;
+                    }
+                    
+                    document.getElementById('userName').textContent = currentAdmin.name;
+                    document.getElementById('userEmail').textContent = user.email;
+                    document.getElementById('welcomeTitle').textContent = `مرحباً، ${currentAdmin.name}`;
+                    loadProgramData();
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من المسؤول:", error);
+                });
+        }
+        
+        function loadProgramData() {
+            if (!programId) {
+                window.location.href = 'app.html';
+                return;
+            }
+            
+            const database = firebase.database();
+            
+            database.ref('programs/' + programId).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        window.location.href = 'app.html';
+                        return;
+                    }
+                    
+                    currentProgram = snapshot.val();
+                    document.getElementById('welcomeSubtitle').textContent = `إدارة المواد الدراسية - ${currentProgram.name}`;
+                    loadSubjects();
+                })
+                .catch((error) => {
+                    console.error("خطأ في تحميل بيانات التطبيق:", error);
+                });
+        }
+        
+        // فتح/إغلاق قائمة المستخدم
+        document.getElementById('userAvatar').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        
+        // إغلاق قائمة المستخدم عند النقر خارجها
+        document.addEventListener('click', (event) => {
+            const userMenu = document.querySelector('.user-menu');
+            if (!userMenu.contains(event.target)) {
+                document.getElementById('userDropdown').classList.remove('show');
+            }
+        });
+        
+        // فتح نافذة تأكيد تسجيل الخروج
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('show');
+            document.getElementById('logoutConfirm').style.display = 'flex';
+        });
+        
+        // إلغاء تسجيل الخروج
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            document.getElementById('logoutConfirm').style.display = 'none';
+        });
+        
+        // تأكيد تسجيل الخروج
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            firebase.auth().signOut()
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error("خطأ في تسجيل الخروج:", error);
+                });
+        });
+        
+        // فتح نافذة إنشاء مادة جديدة
+        document.getElementById('addSubjectBtn').addEventListener('click', () => {
+            document.getElementById('subjectModal').style.display = 'flex';
+        });
+        
+        // إغلاق نافذة إنشاء مادة جديدة
+        document.getElementById('cancelSubjectBtn').addEventListener('click', () => {
+            document.getElementById('subjectModal').style.display = 'none';
+            document.getElementById('subjectName').value = '';
+            document.getElementById('subjectDescription').value = '';
+        });
+        
+        // حفظ المادة الجديدة
+        document.getElementById('saveSubjectBtn').addEventListener('click', () => {
+            const subjectName = document.getElementById('subjectName').value.trim();
+            const subjectDescription = document.getElementById('subjectDescription').value.trim();
+            
+            if (!subjectName) {
+                alert('يرجى إدخال اسم المادة');
+                return;
+            }
+            
+            saveSubject(subjectName, subjectDescription);
+        });
+        
+        function saveSubject(name, description) {
+            const database = firebase.database();
+            const subjectId = 'subject' + Date.now();
+            
+            database.ref('programs/' + programId + '/subjects/' + subjectId).set({
+                name: name,
+                description: description,
+                code: currentAdmin.code,
+                ad: currentAdmin.name,
+                branches: {}
+            })
+            .then(() => {
+                document.getElementById('subjectModal').style.display = 'none';
+                document.getElementById('subjectName').value = '';
+                document.getElementById('subjectDescription').value = '';
+                loadSubjects();
+            })
+            .catch((error) => {
+                console.error("خطأ في حفظ المادة:", error);
+                alert("حدث خطأ أثناء حفظ المادة");
+            });
+        }
+        
+        function loadSubjects() {
+            const database = firebase.database();
+            const subjectsList = document.getElementById('subjectsList');
+            
+            database.ref('programs/' + programId + '/subjects').once('value')
+                .then((snapshot) => {
+                    const subjects = snapshot.val();
+                    subjectsList.innerHTML = '';
+                    
+                    if (!subjects) {
+                        subjectsList.innerHTML = '<div class="empty-state">لا توجد مواد حتى الآن</div>';
+                        return;
+                    }
+                    
+                    for (const subjectId in subjects) {
+                        const subject = subjects[subjectId];
+                        
+                        const subjectCard = document.createElement('div');
+                        subjectCard.className = 'item-card';
+                        subjectCard.onclick = () => {
+                            window.location.href = `bench.html?program=${programId}&subject=${subjectId}`;
+                        };
+                        
+                        subjectCard.innerHTML = `
+                            <div class="item-icon">📚</div>
+                            <div class="item-name">${subject.name}</div>
+                            <div class="item-description">${subject.description || 'لا يوجد وصف'}</div>
+                            <div class="item-admin">بواسطة: ${subject.ad}</div>
+                        `;
+                        
+                        subjectsList.appendChild(subjectCard);
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في تحميل المواد:", error);
+                    subjectsList.innerHTML = '<div class="empty-state">حدث خطأ في تحميل المواد</div>';
+                });
+        }
+    </script>
+</body>
+</html>

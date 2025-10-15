@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo7adraty - الدكاترة</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #2a2a2a;
+            padding: 15px 30px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #666;
+        }
+        
+        .user-avatar:hover {
+            background: #555;
+            border-color: #888;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 50px;
+            left: 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            min-width: 200px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .user-dropdown.show {
+            display: block;
+        }
+        
+        .user-info {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+            margin-bottom: 10px;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+        
+        .logout-btn:hover {
+            background: #ff3742;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .welcome-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .welcome-title {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        
+        .welcome-subtitle {
+            color: #cccccc;
+            font-size: 16px;
+        }
+        
+        .content-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 22px;
+            color: #ffffff;
+        }
+        
+        .btn {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .item-card {
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .item-card:hover {
+            background: #3a3a3a;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .item-description {
+            font-size: 14px;
+            color: #aaaaaa;
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+        
+        .item-admin {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            grid-column: 1 / -1;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid #444;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #333;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #777;
+        }
+        
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirm-content {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #444;
+            text-align: center;
+        }
+        
+        .confirm-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+        
+        .confirm-message {
+            margin-bottom: 25px;
+            color: #cccccc;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        footer {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #444;
+            margin-top: 50px;
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Mo7adraty</div>
+        <div class="user-menu">
+            <div class="user-avatar" id="userAvatar">
+                <span>⚙️</span>
+            </div>
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-info">
+                    <div class="user-name" id="userName">اسم المستخدم</div>
+                    <div class="user-email" id="userEmail">user@example.com</div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="welcome-section">
+            <h1 class="welcome-title" id="welcomeTitle">مرحباً، [اسم المستخدم]</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">إدارة الدكاترة</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">قائمة الدكاترة</h2>
+                <button id="addDoctorBtn" class="btn">إضافة دكتور جديد</button>
+            </div>
+            
+            <div id="doctorsList" class="items-grid">
+                <div class="loading">جاري تحميل الدكاترة...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة إضافة دكتور جديد -->
+    <div id="doctorModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">إضافة دكتور جديد</h3>
+            <div class="form-group">
+                <label for="doctorName">اسم الدكتور</label>
+                <input type="text" id="doctorName" placeholder="أدخل اسم الدكتور">
+            </div>
+            <div class="modal-actions">
+                <button id="cancelDoctorBtn" class="btn btn-secondary">إلغاء</button>
+                <button id="saveDoctorBtn" class="btn">حفظ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تأكيد تسجيل الخروج -->
+    <div id="logoutConfirm" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 class="confirm-title">تأكيد تسجيل الخروج</h3>
+            <p class="confirm-message">هل أنت متأكد من رغبتك في تسجيل الخروج؟</p>
+            <div class="confirm-actions">
+                <button id="cancelLogout" class="btn btn-secondary">إلغاء</button>
+                <button id="confirmLogout" class="btn" style="background: #ff4757; color: white;">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
+    </footer>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoxrR7OvzDppT5LxYVoZTLCFvTeyDqPkQ",
+            authDomain: "mo7adraty-1636d.firebaseapp.com",
+            databaseURL: "https://mo7adraty-1636d-default-rtdb.firebaseio.com",
+            projectId: "mo7adraty-1636d",
+            storageBucket: "mo7adraty-1636d.firebasestorage.app"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const programId = urlParams.get('program');
+        const subjectId = urlParams.get('subject');
+        const branchId = urlParams.get('branch');
+        
+        let currentAdmin = null;
+        let currentProgram = null;
+        let currentSubject = null;
+        let currentBranch = null;
+        
+        // التحقق من حالة تسجيل الدخول
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            } else {
+                checkAdminStatus(user);
+            }
+        });
+        
+        function checkAdminStatus(user) {
+            const database = firebase.database();
+            
+            database.ref('admins').orderByChild('email').equalTo(user.email).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) {
+                        firebase.auth().signOut();
+                        return;
+                    }
+                    
+                    const adminData = snapshot.val();
+                    const adminId = Object.keys(adminData)[0];
+                    currentAdmin = adminData[adminId];
+                    
+                    if (currentAdmin.ban) {
+                        firebase.auth().signOut();
+                        alert("تم حظر حسابك من قبل مالك الموقع.");
+                        return;
+                    }
+                    
+                    document.getElementById('userName').textContent = currentAdmin.name;
+                    document.getElementById('userEmail').textContent = user.email;
+                    document.getElementById('welcomeTitle').textContent = `مرحباً، ${currentAdmin.name}`;
+                    loadBranchData();
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من المسؤول:", error);
+                });
+        }
+        
+        function loadBranchData() {
+            if (!programId || !subjectId) {
+                window.location.href = 'app.html';
+                return;
+            }
+            
+            const database = firebase.database();
+            
+            const promises = [
+                database.ref('programs/' + programId).once('value'),
+                database.ref('programs/' + programId + '/subjects/' + subjectId).once('value')
+            ];
+            
+            if (branchId) {
+                promises.push(database.ref('programs/' + programId + '/subjects/' + subjectId + '/branches/' + branchId).once('value'));
+            }
+            
+            Promise.all(promises)
+            .then(([programSnapshot, subjectSnapshot, branchSnapshot]) => {
+                if (!programSnapshot.exists() || !subjectSnapshot.exists()) {
+                    window.location.href = 'app.html';
+                    return;
+                }
+                
+                currentProgram = programSnapshot.val();
+                currentSubject = subjectSnapshot.val();
+                
+                let title = `إدارة الدكاترة - ${currentSubject.name}`;
+                
+                if (branchId && branchSnapshot && branchSnapshot.exists()) {
+                    currentBranch = branchSnapshot.val();
+                    title += ` - ${currentBranch.name}`;
+                }
+                
+                document.getElementById('welcomeSubtitle').textContent = title;
+                loadDoctors();
+            })
+            .catch((error) => {
+                console.error("خطأ في تحميل البيانات:", error);
+                window.location.href = 'app.html';
+            });
+        }
+        
+        // فتح/إغلاق قائمة المستخدم
+        document.getElementById('userAvatar').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.toggle('show');
+        });
+        
+        // إغلاق قائمة المستخدم عند النقر خارجها
+        document.addEventListener('click', (event) => {
+            const userMenu = document.querySelector('.user-menu');
+            if (!userMenu.contains(event.target)) {
+                document.getElementById('userDropdown').classList.remove('show');
+            }
+        });
+        
+        // فتح نافذة تأكيد تسجيل الخروج
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.remove('show');
+            document.getElementById('logoutConfirm').style.display = 'flex';
+        });
+        
+        // إلغاء تسجيل الخروج
+        document.getElementById('cancelLogout').addEventListener('click', () => {
+            document.getElementById('logoutConfirm').style.display = 'none';
+        });
+        
+        // تأكيد تسجيل الخروج
+        document.getElementById('confirmLogout').addEventListener('click', () => {
+            firebase.auth().signOut()
+                .then(() => {
+                    window.location.href = 'index.html';
+                })
+                .catch((error) => {
+                    console.error("خطأ في تسجيل الخروج:", error);
+                });
+        });
+        
+        // فتح نافذة إضافة دكتور جديد
+        document.getElementById('addDoctorBtn').addEventListener('click', () => {
+            document.getElementById('doctorModal').style.display = 'flex';
+        });
+        
+        // إغلاق نافذة إضافة دكتور جديد
+        document.getElementById('cancelDoctorBtn').addEventListener('click', () => {
+            document.getElementById('doctorModal').style.display = 'none';
+            document.getElementById('doctorName').value = '';
+        });
+        
+        // حفظ الدكتور الجديد
+        document.getElementById('saveDoctorBtn').addEventListener('click', () => {
+            const doctorName = document.getElementById('doctorName').value.trim();
+            
+            if (!doctorName) {
+                alert('يرجى إدخال اسم الدكتور');
+                return;
+            }
+            
+            saveDoctor(doctorName);
+        });
+        
+        function saveDoctor(name) {
+            const database = firebase.database();
+            const doctorId = 'doctor' + Date.now();
+            
+            let refPath;
+            if (branchId) {
+                refPath = `programs/${programId}/subjects/${subjectId}/branches/${branchId}/doctors/${doctorId}`;
+            } else {
+                refPath = `programs/${programId}/subjects/${subjectId}/doctors/${doctorId}`;
+            }
+            
+            database.ref(refPath).set({
+                name: name,
+                code: currentAdmin.code,
+                ad: currentAdmin.name,
+                files: {}
+            })
+            .then(() => {
+                document.getElementById('doctorModal').style.display = 'none';
+                document.getElementById('doctorName').value = '';
+                loadDoctors();
+            })
+            .catch((error) => {
+                console.error("خطأ في حفظ الدكتور:", error);
+                alert("حدث خطأ أثناء حفظ الدكتور");
+            });
+        }
+        
+        function loadDoctors() {
+            const database = firebase.database();
+            const doctorsList = document.getElementById('doctorsList');
+            
+            let refPath;
+            if (branchId) {
+                refPath = `programs/${programId}/subjects/${subjectId}/branches/${branchId}/doctors`;
+            } else {
+                refPath = `programs/${programId}/subjects/${subjectId}/doctors`;
+            }
+            
+            database.ref(refPath).once('value')
+                .then((snapshot) => {
+                    const doctors = snapshot.val();
+                    doctorsList.innerHTML = '';
+                    
+                    if (!doctors) {
+                        doctorsList.innerHTML = '<div class="empty-state">لا توجد دكاترة حتى الآن</div>';
+                        return;
+                    }
+                    
+                    for (const doctorId in doctors) {
+                        const doctor = doctors[doctorId];
+                        
+                        const doctorCard = document.createElement('div');
+                        doctorCard.className = 'item-card';
+                        doctorCard.onclick = () => {
+                            let url = `pdf.html?program=${programId}&subject=${subjectId}&doctor=${doctorId}`;
+                            if (branchId) {
+                                url += `&branch=${branchId}`;
+                            }
+                            window.location.href = url;
+                        };
+                        
+                        doctorCard.innerHTML = `
+                            <div class="item-avatar">👨‍⚕️</div>
+                            <div class="item-info">
+                                <div class="item-name">${doctor.name}</div>
+                                <div class="item-admin">بواسطة: ${doctor.ad}</div>
+                            </div>
+                        `;
+                        
+                        doctorsList.appendChild(doctorCard);
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في تحميل الدكاترة:", error);
+                    doctorsList.innerHTML = '<div class="empty-state">حدث خطأ في تحميل الدكاترة</div>';
+                });
+        }
+    </script>
+</body>
+</html>

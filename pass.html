@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mo7adraty - كود التحقق</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-card {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            border: 1px solid #444;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffffff;
+            text-align: center;
+        }
+        
+        .page-title {
+            font-size: 22px;
+            margin-bottom: 30px;
+            color: #ffffff;
+            text-align: center;
+        }
+        
+        .info-text {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #cccccc;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cccccc;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #333;
+            color: #ffffff;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+        
+        .btn {
+            background: #ffffff;
+            color: #1a1a1a;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .error-message {
+            background: #ff4757;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        footer {
+            background: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #444;
+        }
+        
+        .copyright {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-card">
+            <div class="logo">Mo7adraty</div>
+            <h1 class="page-title">كود التحقق</h1>
+            
+            <div class="info-text">
+                تم إنشاء كود تحقق خاص بك. يرجى إدخاله للمتابعة إلى لوحة التحكم.
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div class="form-group">
+                <label for="code">أدخل كود التحقق</label>
+                <input type="text" id="code" placeholder="أدخل كود التحقق">
+            </div>
+            
+            <button id="submitBtn" class="btn">تحقق</button>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="copyright">مطور الموقع شادو جميع الحقوق محفوظة 2025</div>
+    </footer>
+
+    <script>
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoxrR7OvzDppT5LxYVoZTLCFvTeyDqPkQ",
+            authDomain: "mo7adraty-1636d.firebaseapp.com",
+            databaseURL: "https://mo7adraty-1636d-default-rtdb.firebaseio.com",
+            projectId: "mo7adraty-1636d",
+            storageBucket: "mo7adraty-1636d.firebasestorage.app"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // التحقق من حالة تسجيل الدخول
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // معالجة إرسال النموذج
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const code = document.getElementById('code').value.trim();
+            const errorElement = document.getElementById('errorMessage');
+            
+            if (!code) {
+                showError('كود التحقق مطلوب');
+                return;
+            }
+            
+            verifyCode(code)
+                .then((valid) => {
+                    if (valid) {
+                        window.location.href = 'app.html';
+                    } else {
+                        showError('كود التحقق غير صحيح');
+                    }
+                })
+                .catch((error) => {
+                    console.error("خطأ في التحقق من الكود:", error);
+                    showError('حدث خطأ أثناء التحقق من الكود');
+                });
+        });
+        
+        function verifyCode(code) {
+            const user = firebase.auth().currentUser;
+            const database = firebase.database();
+            
+            return database.ref('admins').orderByChild('email').equalTo(user.email).once('value')
+                .then((snapshot) => {
+                    if (!snapshot.exists()) return false;
+                    
+                    const adminData = snapshot.val();
+                    const adminId = Object.keys(adminData)[0];
+                    const admin = adminData[adminId];
+                    
+                    return admin.code === code;
+                });
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
